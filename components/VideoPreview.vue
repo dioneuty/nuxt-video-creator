@@ -57,11 +57,24 @@
         {{ isBackgroundMusicPlaying ? '배경음악 중지' : '배경음악 재생' }}
       </button>
     </div>
+    <VideoFrames 
+      :videoSrc="videoSrc" 
+      :duration="duration" 
+      @seek="onSeek"
+    />
+    <VideoEditor 
+      :duration="duration"
+      :currentTime="currentTime"
+      @update:trimRange="updateTrimRange"
+      @update:playbackRate="updatePlaybackRate"
+    />
   </div>
 </template>
 
 <script setup>
 import { ref, watch, computed } from 'vue'
+import VideoEditor from './VideoEditor.vue'
+import VideoFrames from './VideoFrames.vue'
 
 const props = defineProps({
   videoSrc: String,
@@ -123,9 +136,10 @@ const togglePlay = () => {
   }
 }
 
-const onSeek = (event) => {
-  const time = parseFloat(event.target.value)
-  videoPlayer.value.currentTime = time
+const onSeek = (time) => {
+  if (videoPlayer.value) {
+    videoPlayer.value.currentTime = time
+  }
 }
 
 const toggleBackgroundMusic = () => {
@@ -142,6 +156,25 @@ const formatTime = (time) => {
   const seconds = Math.floor(time % 60)
   return `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`
 }
+
+const trimRange = ref({ start: 0, end: 0 })
+const playbackRate = ref(1)
+
+const updateTrimRange = (range) => {
+  trimRange.value = range
+  videoPlayer.value.currentTime = range.start
+}
+
+const updatePlaybackRate = (rate) => {
+  playbackRate.value = rate
+  videoPlayer.value.playbackRate = rate
+}
+
+watch(videoPlayer, (newPlayer) => {
+  if (newPlayer) {
+    newPlayer.playbackRate = playbackRate.value
+  }
+})
 
 watch(() => props.videoSrc, (newSrc) => {
   if (newSrc) {
