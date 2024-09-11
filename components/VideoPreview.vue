@@ -38,6 +38,7 @@
           :max="duration" 
           :value="currentTime" 
           @input="onSeek" 
+          @click="onSeekBarClick"
           class="w-full"
         >
         <span class="ml-2 text-sm text-gray-600 dark:text-gray-400">
@@ -142,6 +143,14 @@ const onSeek = (time) => {
   }
 }
 
+const onSeekBarClick = (event) => {
+  const seekBar = event.target;
+  const rect = seekBar.getBoundingClientRect();
+  const offsetX = event.clientX - rect.left;
+  const newTime = (offsetX / rect.width) * duration.value;
+  onSeek(newTime);
+}
+
 const toggleBackgroundMusic = () => {
   if (isBackgroundMusicPlaying.value) {
     audioPlayer.value.pause()
@@ -202,4 +211,22 @@ watch(() => props.subtitles, () => {
     }
   }
 }, { deep: true })
+
+// 새로운 downloadVideo 메서드 추가
+const downloadVideo = () => {
+  if (videoPlayer.value && videoPlayer.value.src) {
+    const a = document.createElement('a')
+    a.href = videoPlayer.value.src
+    a.download = 'edited_video.mp4'
+    document.body.appendChild(a)
+    a.click()
+    document.body.removeChild(a)
+  }
+}
+
+// defineExpose를 사용하여 메서드를 외부에 노출
+defineExpose({
+  downloadVideo
+})
+
 </script>

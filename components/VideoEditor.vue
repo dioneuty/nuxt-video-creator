@@ -4,20 +4,20 @@
     
     <!-- 구간 자르기 -->
     <div class="mb-4">
-      <h4 class="text-md font-medium mb-2">구간 자르기</h4>
+      <h4 class="text-md font-medium mb-2 text-gray-900 dark:text-gray-100">구간 자르기</h4>
       <div class="flex items-center space-x-2">
-        <input v-model="startTime" type="number" min="0" :max="duration" step="0.1" class="border p-2 rounded w-24">
-        <span>~</span>
-        <input v-model="endTime" type="number" :min="startTime" :max="duration" step="0.1" class="border p-2 rounded w-24">
+        <input v-model="startTime" type="number" min="0" :max="duration" step="0.1" class="border p-2 rounded w-24 bg-white dark:bg-gray-600 text-gray-900 dark:text-gray-100">
+        <span class="text-gray-900 dark:text-gray-100">~</span>
+        <input v-model="endTime" type="number" :min="startTime" :max="duration" step="0.1" class="border p-2 rounded w-24 bg-white dark:bg-gray-600 text-gray-900 dark:text-gray-100">
         <button @click="setTrimRange" class="bg-blue-500 text-white p-2 rounded">설정</button>
       </div>
     </div>
     
     <!-- 재생 속도 -->
     <div class="mb-4">
-      <h4 class="text-md font-medium mb-2">재생 속도</h4>
+      <h4 class="text-md font-medium mb-2 text-gray-900 dark:text-gray-100">재생 속도</h4>
       <input v-model="playbackRate" type="range" min="0.5" max="2" step="0.1" class="w-full">
-      <span class="text-sm">{{ playbackRate }}x</span>
+      <span class="text-sm text-gray-900 dark:text-gray-100">{{ playbackRate }}x</span>
     </div>
     
     <button @click="applyChanges" class="bg-green-500 text-white p-2 rounded">변경 사항 적용</button>

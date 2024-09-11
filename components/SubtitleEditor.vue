@@ -8,10 +8,10 @@
             <template #item="{ element, index }">
                 <div class="flex items-center space-x-2 bg-gray-100 dark:bg-gray-700 p-2 rounded">
                     <span class="cursor-move">☰</span>
-                    <input v-model="element.startTime" type="text" placeholder="시작 시간" class="border p-2 rounded w-24">
-                    <input v-model="element.endTime" type="text" placeholder="종료 시간" class="border p-2 rounded w-24">
-                    <input v-model="element.text" type="text" placeholder="자막 텍스트" class="border p-2 rounded flex-grow">
-                    <select v-model="element.position" class="border p-2 rounded">
+                    <input v-model="element.startTime" type="text" placeholder="시작 시간" class="border p-2 rounded w-24 bg-white dark:bg-gray-600 text-gray-900 dark:text-gray-100">
+                    <input v-model="element.endTime" type="text" placeholder="종료 시간" class="border p-2 rounded w-24 bg-white dark:bg-gray-600 text-gray-900 dark:text-gray-100">
+                    <input v-model="element.text" type="text" placeholder="자막 텍스트" class="border p-2 rounded flex-grow bg-white dark:bg-gray-600 text-gray-900 dark:text-gray-100">
+                    <select v-model="element.position" class="border p-2 rounded bg-white dark:bg-gray-600 text-gray-900 dark:text-gray-100">
                         <option value="bottom">하단</option>
                         <option value="top">상단</option>
                         <option value="middle">중앙</option>
