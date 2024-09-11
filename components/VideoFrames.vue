@@ -15,35 +15,31 @@
     </div>
     <div 
       ref="scrollContainer"
-      class="relative overflow-x-auto bg-gray-100 dark:bg-gray-700 rounded"
-      style="height: 150px;"
+      class="flex overflow-x-auto space-x-2 p-2 bg-gray-100 dark:bg-gray-700 rounded"
       @scroll="onScroll"
     >
-      <div :style="{ width: `${totalWidth}px`, height: '100%' }" class="absolute top-0 left-0">
-        <div 
-          v-for="frame in visibleFrames" 
-          :key="frame.index" 
-          :style="{ position: 'absolute', left: `${frame.index * frameWidth}px`, width: `${frameWidth}px` }"
-          class="h-full flex flex-col items-center justify-center"
-        >
-          <img 
-            :src="frame.src" 
-            alt="Frame" 
-            class="w-24 h-16 object-cover rounded cursor-pointer" 
-            @click="seekTo(frame.index)"
-            @load="frame.loaded = true"
-            v-show="frame.loaded"
-          >
-          <div v-show="!frame.loaded" class="w-24 h-16 bg-gray-300 dark:bg-gray-600 rounded"></div>
-          <div class="text-xs text-center mt-1">{{ formatTime(frame.index * frameInterval) }}</div>
-        </div>
+      <div :style="{ width: `${totalWidth}px` }" class="relative h-96">
+        <Transition name="fade" mode="out-in">
+          <div :key="firstVisibleIndex" class="frames-container">
+            <div 
+              v-for="frame in visibleFrames" 
+              :key="frame.index" 
+              :style="{ position: 'absolute', left: `${frame.index * 100}px` }"
+              class="w-24"
+            >
+              <img :src="frame.src" alt="Frame" class="w-24 h-16 object-cover rounded cursor-pointer" @click="seekTo(frame.index)">
+              <div class="text-xs text-center mt-1">{{ formatTime(frame.index * frameInterval) }}</div>
+            </div>
+          </div>
+        </Transition>
       </div>
     </div>
   </div>
+  {{ tot }}
 </template>
 
 <script setup>
-import { ref, computed, onMounted, watch, onUnmounted } from 'vue'
+import { ref, computed, onMounted, watch } from 'vue'
 
 const props = defineProps({
   videoSrc: String,
@@ -53,11 +49,10 @@ const props = defineProps({
 const emit = defineEmits(['seek'])
 
 const scrollContainer = ref(null)
-const frameRate = ref(1)
+const frameRate = ref(1) // 기본값 1 fps
 const frameInterval = computed(() => 1 / frameRate.value)
 const totalFrames = computed(() => Math.floor(props.duration * frameRate.value))
-const frameWidth = 100 // 각 프레임의 너비
-const totalWidth = computed(() => totalFrames.value * frameWidth)
+const totalWidth = computed(() => totalFrames.value * 100) // 각 프레임의 너비를 100px로 가정
 
 const visibleFrames = ref([])
 const scrollPosition = ref(0)
@@ -71,25 +66,17 @@ const updateFrameRate = () => {
   updateVisibleFrames()
 }
 
-const updateVisibleFrames = () => {
-  const startIndex = Math.floor(scrollPosition.value / frameWidth)
-  const endIndex = Math.min(startIndex + Math.ceil(containerWidth.value / frameWidth) + 1, totalFrames.value)
+const updateVisibleFrames = async () => {
+  const startIndex = Math.floor(scrollPosition.value / 100)
+  const endIndex = Math.min(startIndex + Math.ceil(containerWidth.value / 100) + 1, totalFrames.value)
   
-  visibleFrames.value = Array.from({ length: endIndex - startIndex }, (_, i) => ({
-    index: i + startIndex,
-    src: '',
-    loaded: false
-  }))
-
-  requestAnimationFrame(() => {
-    visibleFrames.value.forEach(frame => {
-      if (!frame.loaded) {
-        generateFrame(frame.index * frameInterval.value).then(src => {
-          frame.src = src
-        })
-      }
-    })
-  })
+  visibleFrames.value = await Promise.all(
+    Array.from({ length: endIndex - startIndex }, (_, i) => i + startIndex)
+      .map(async (index) => ({
+        index,
+        src: await generateFrame(index * frameInterval.value)
+      }))
+  )
 }
 
 const generateFrame = async (time) => {
@@ -125,47 +112,47 @@ const formatTime = (time) => {
   return `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}.${milliseconds.toString().padStart(3, '0')}`
 }
 
-let resizeObserver
+watch(() => props.videoSrc, updateVisibleFrames)
+watch(() => props.duration, updateVisibleFrames)
+
 onMounted(() => {
   if (scrollContainer.value) {
     containerWidth.value = scrollContainer.value.clientWidth
     updateVisibleFrames()
-
-    resizeObserver = new ResizeObserver(() => {
-      containerWidth.value = scrollContainer.value.clientWidth
-      updateVisibleFrames()
-    })
-    resizeObserver.observe(scrollContainer.value)
   }
 })
 
-onUnmounted(() => {
-  if (resizeObserver) {
-    resizeObserver.disconnect()
-  }
-})
-
-watch(() => props.videoSrc, updateVisibleFrames)
-watch(() => props.duration, updateVisibleFrames)
-watch(frameRate, updateVisibleFrames)
+const handleScroll = (event) => {
+  scrollTop.value = event.target.scrollTop;
+};
 </script>
 
 <style scoped>
-.overflow-x-auto {
-  scrollbar-width: thin;
-  scrollbar-color: rgba(156, 163, 175, 0.5) transparent;
+.virtual-scroll-container {
+  overflow-y: auto;
 }
 
-.overflow-x-auto::-webkit-scrollbar {
-  height: 6px;
+.virtual-scroll-content {
+  position: relative;
 }
 
-.overflow-x-auto::-webkit-scrollbar-track {
-  background: transparent;
+.virtual-scroll-content > div {
+  position: absolute;
+  left: 0;
+  right: 0;
 }
 
-.overflow-x-auto::-webkit-scrollbar-thumb {
-  background-color: rgba(156, 163, 175, 0.5);
-  border-radius: 3px;
+.fade-enter-active,
+.fade-leave-active {
+  transition: opacity 0.3s ease;
+}
+
+.fade-enter-from,
+.fade-leave-to {
+  opacity: 0;
+}
+
+.frames-container {
+  position: relative;
 }
 </style>
